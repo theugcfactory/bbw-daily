@@ -8,7 +8,7 @@ spec.json:
 {
   "row1_label": "1D — top ads yesterday (Tue Sep 16)",
   "row2_label": "7D — top ads last 7 days (Sep 10–16)",
-  "row1": [ {"name": "...", "kind": "static|video", "spend": 19.03, "leads": 0, "cpl": null, "image_url": "https://..."} , ... up to 5 ],
+  "row1": [ {"name": "...", "kind": "static|video", "spend": 19.03, "leads": 0, "cpl": null, "cpc": 1.73, "cpm": 17.21, "image_url": "https://..."} , ... up to 5 ],
   "row2": [ ... up to 5 ]
 }
 Cards are ranked left to right in the order given. Images are downloaded directly (no credentials needed for fbcdn URLs).
@@ -39,13 +39,20 @@ def card(a, rank):
     fs = ImageFont.truetype(B, 34)
     leads = int(a.get('leads') or 0)
     l1 = f"${a['spend']:,.2f} · {leads} lead{'s' if leads != 1 else ''}"
-    l2 = f"${a['cpl']:,.2f} CPL" if a.get('cpl') is not None else "— CPL"
+    fm = ImageFont.truetype(B, 44)
+    def money(k, lbl):
+        v = a.get(k)
+        return (f"${v:,.2f} {lbl}" if v is not None else f"— {lbl}")
+    lines = [(money('cpl', 'CPL'), (255, 214, 0, 255)), (money('cpc', 'CPC'), (225, 225, 225, 255)), (money('cpm', 'CPM'), (225, 225, 225, 255))]
     pad = 30
-    w = max(d.textlength(l1, font=fv), d.textlength(l2, font=fv)) + pad * 2
-    h = pad * 2 + 52 + 52 + 16
+    w = max([d.textlength(l1, font=fv)] + [d.textlength(t, font=fm) for t, _ in lines]) + pad * 2
+    h = pad * 2 + 52 + 12 + 3 * 54
     d.rounded_rectangle([40, 40, 40 + w, 40 + h], radius=24, fill=(0, 0, 0, 238))
     d.text((40 + pad, 40 + pad), l1, fill='white', font=fv)
-    d.text((40 + pad, 40 + pad + 68), l2, fill=(255, 214, 0, 255), font=fv)
+    yy = 40 + pad + 52 + 12
+    for t, col in lines:
+        d.text((40 + pad, yy), t, fill=col, font=fm)
+        yy += 54
     d.rounded_rectangle([1080 - 40 - 96, 40, 1080 - 40, 136], radius=24, fill=(255, 214, 0, 245))
     fr = ImageFont.truetype(B, 58)
     t = str(rank)
